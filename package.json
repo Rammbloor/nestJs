@@ -1,0 +1,108 @@
+{
+  "name": "home-work1",
+  "version": "0.0.1",
+  "description": "",
+  "author": "Rammbloor",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "nest build && tsc-alias -p tsconfig.build.json",
+    "format": "biome format --write .",
+    "lint": "biome lint --write .",
+    "check": "biome check --write .",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "typeorm": "pnpm build && pnpm exec typeorm -d dist/modules/infra/postgres/typeorm.config.js",
+    "migration:generate": "pnpm build && sh -c 'name=\"${npm_config_name:-${1#--name=}}\"; pnpm exec typeorm migration:generate src/modules/infra/postgres/migrations/${name:?Please pass --name=MigrationName} -d dist/modules/infra/postgres/typeorm.config.js' --",
+    "migration:run": "pnpm build && pnpm exec typeorm migration:run -d dist/modules/infra/postgres/typeorm.config.js",
+    "migration:revert": "pnpm build && pnpm exec typeorm migration:revert -d dist/modules/infra/postgres/typeorm.config.js",
+    "migration:show": "pnpm build && pnpm exec typeorm migration:show -d dist/modules/infra/postgres/typeorm.config.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config ./test/jest-e2e.json"
+  },
+  "dependencies": {
+    "@automapper/classes": "^8.8.1",
+    "@automapper/core": "^8.8.1",
+    "@automapper/nestjs": "^8.8.1",
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/jwt": "^11.0.2",
+    "@nestjs/mapped-types": "*",
+    "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.3.0",
+    "@nestjs/throttler": "^6.5.0",
+    "@nestjs/typeorm": "^11.0.1",
+    "@scalar/nestjs-api-reference": "^1.1.8",
+    "argon2": "^0.44.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "dotenv": "^17.4.2",
+    "express-basic-auth": "^1.2.1",
+    "helmet": "^8.1.0",
+    "pg": "^8.20.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "swagger-ui-express": "^5.0.1",
+    "typeorm": "^0.3.28",
+    "typeorm-naming-strategies": "^4.1.0",
+    "typeorm-transactional": "^0.5.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.12",
+    "@eslint/js": "^9.18.0",
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.0.1",
+    "@types/express": "^5.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.10.7",
+    "@types/pg": "^8.20.0",
+    "@types/supertest": "^6.0.2",
+    "eslint": "^9.18.0",
+    "globals": "^16.0.0",
+    "install": "0.13.0",
+    "jest": "^30.0.0",
+    "source-map-support": "^0.5.21",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.2.5",
+    "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.16",
+    "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.3"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": ".",
+    "testRegex": "test/unit/.*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "src/**/*.(t|j)s"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "^@api/(.*)$": "<rootDir>/src/modules/api/$1",
+      "^@infra/(.*)$": "<rootDir>/src/modules/infra/$1",
+      "^@shared/(.*)$": "<rootDir>/src/modules/shared/$1"
+    },
+    "setupFilesAfterEnv": [
+      "<rootDir>/test/jest.setup.ts"
+    ],
+    "coverageDirectory": "./coverage",
+    "testEnvironment": "node"
+  },
+  "packageManager": "pnpm@10.26.1+sha512.664074abc367d2c9324fdc18037097ce0a8f126034160f709928e9e9f95d98714347044e5c3164d65bd5da6c59c6be362b107546292a8eecb7999196e5ce58fa"
+}
