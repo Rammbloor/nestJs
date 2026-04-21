@@ -1,8 +1,9 @@
 import { AuthSessionOutputDto, AuthTokensOutputDto, LoginInputDto } from '@api/v1/auth/dto';
 import { CreateUserInputDto } from '@api/v1/user/dto';
-import { AppConfigService } from '@infra/config/config.service';
+import { appConfig, authCookieConfig } from '@infra/config/config';
 import { AUTH_THROTTLE_RULES } from '@infra/throttler';
-import { Body, Controller, Delete, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Post, Req, Res, UseGuards } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { ApiCookieAuth, ApiOperation, ApiTags, ApiTooManyRequestsResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { REFRESH_TOKEN_COOKIE_NAME } from '@shared/constants';
@@ -32,7 +33,10 @@ import { AuthService } from './auth.service';
 export class AuthController {
    constructor(
       private readonly authService: AuthService,
-      private readonly configService: AppConfigService,
+      @Inject(appConfig.KEY)
+      private readonly app: ConfigType<typeof appConfig>,
+      @Inject(authCookieConfig.KEY)
+      private readonly authCookie: ConfigType<typeof authCookieConfig>,
    ) {}
 
    @ApiOperation({ summary: 'Регистрация нового пользователя' })
@@ -55,7 +59,7 @@ export class AuthController {
       setRefreshTokenCookie(
          response,
          session.refreshToken,
-         buildCookieOptions(this.configService),
+         buildCookieOptions(this.app, this.authCookie),
          session.refreshTokenExpiresAt,
       );
 
@@ -82,7 +86,7 @@ export class AuthController {
       setRefreshTokenCookie(
          response,
          session.refreshToken,
-         buildCookieOptions(this.configService),
+         buildCookieOptions(this.app, this.authCookie),
          session.refreshTokenExpiresAt,
       );
 
@@ -112,7 +116,7 @@ export class AuthController {
       setRefreshTokenCookie(
          response,
          session.refreshToken,
-         buildCookieOptions(this.configService),
+         buildCookieOptions(this.app, this.authCookie),
          session.refreshTokenExpiresAt,
       );
 
@@ -128,7 +132,7 @@ export class AuthController {
       @Res({ passthrough: true }) response: Response,
    ): Promise<boolean> {
       await this.authService.logout(getCookieValue(request, REFRESH_TOKEN_COOKIE_NAME));
-      clearRefreshTokenCookie(response, buildCookieOptions(this.configService));
+      clearRefreshTokenCookie(response, buildCookieOptions(this.app, this.authCookie));
       return true;
    }
 
@@ -155,7 +159,7 @@ export class AuthController {
       @CurrentSessionId() sessionId: string,
       @Res({ passthrough: true }) response: Response,
    ): Promise<boolean> {
-      clearRefreshTokenCookie(response, buildCookieOptions(this.configService));
+      clearRefreshTokenCookie(response, buildCookieOptions(this.app, this.authCookie));
       return this.authService.logoutCurrentSession(userId, sessionId);
    }
 
@@ -168,7 +172,7 @@ export class AuthController {
       @CurrentUserId() userId: string,
       @Res({ passthrough: true }) response: Response,
    ): Promise<boolean> {
-      clearRefreshTokenCookie(response, buildCookieOptions(this.configService));
+      clearRefreshTokenCookie(response, buildCookieOptions(this.app, this.authCookie));
       return this.authService.logoutAllSessions(userId);
    }
 }

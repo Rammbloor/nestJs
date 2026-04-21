@@ -1,8 +1,9 @@
-import { AppConfigService } from '@infra/config/config.service';
+import { appConfig } from '@infra/config/config';
 import { AuthThrottlerGuard, throttlerConfig } from '@infra/throttler';
 import { AllExceptionsFilter, DatabaseExceptionFilter } from '@shared/filters';
 import { TransformInterceptor } from '@shared/interceptors';
 import { INestApplication, Module, ValidationPipe, VersioningType } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getStorageToken, type ThrottlerStorage, ThrottlerModule } from '@nestjs/throttler';
@@ -51,10 +52,10 @@ export async function bootstrapE2eApp(): Promise<{
    }).compile();
 
    const app = moduleFixture.createNestApplication();
-   const configService = app.get(AppConfigService);
+   const appSettings = app.get<ConfigType<typeof appConfig>>(appConfig.KEY);
 
    app.enableCors({
-      origin: configService.corsOrigins,
+      origin: appSettings.corsOrigins,
       credentials: true,
    });
    app.use(helmet());
@@ -62,8 +63,8 @@ export async function bootstrapE2eApp(): Promise<{
    app.enableVersioning({ type: VersioningType.URI });
    app.useGlobalInterceptors(new TransformInterceptor());
    app.useGlobalFilters(
-      new DatabaseExceptionFilter(configService),
-      new AllExceptionsFilter(configService),
+      new DatabaseExceptionFilter(appSettings),
+      new AllExceptionsFilter(appSettings),
    );
    app.useGlobalPipes(
       new ValidationPipe({

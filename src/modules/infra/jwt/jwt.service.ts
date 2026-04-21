@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import { AppConfigService } from '@infra/config/config.service';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { jwtConfig } from '@infra/config/config';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { AuthTokenPair, TokenPayload } from '@shared/interfaces';
 
@@ -8,23 +9,24 @@ import { AuthTokenPair, TokenPayload } from '@shared/interfaces';
 export class AppJwtService {
    constructor(
       private readonly jwtService: JwtService,
-      private readonly configService: AppConfigService,
+      @Inject(jwtConfig.KEY)
+      private readonly config: ConfigType<typeof jwtConfig>,
    ) {}
 
    async generateTokens(userId: string, sessionId: string): Promise<AuthTokenPair> {
       const accessToken = this.jwtService.sign(
          { id: userId, sid: sessionId },
          {
-            secret: this.configService.jwtAccessSecretKey,
-            expiresIn: this.configService.jwtAccessTtl,
+            secret: this.config.accessSecretKey,
+            expiresIn: this.config.accessTtl,
          },
       );
 
       const refreshToken = this.jwtService.sign(
          { id: userId, sid: sessionId },
          {
-            secret: this.configService.jwtRefreshSecretKey,
-            expiresIn: this.configService.jwtRefreshTtl,
+            secret: this.config.refreshSecretKey,
+            expiresIn: this.config.refreshTtl,
             jwtid: randomUUID(),
          },
       );
@@ -33,11 +35,11 @@ export class AppJwtService {
    }
 
    async verifyAccessToken(token: string): Promise<TokenPayload> {
-      return this.verifyToken(token, this.configService.jwtAccessSecretKey, 'access');
+      return this.verifyToken(token, this.config.accessSecretKey, 'access');
    }
 
    async verifyRefreshToken(token: string): Promise<TokenPayload> {
-      return this.verifyToken(token, this.configService.jwtRefreshSecretKey, 'refresh');
+      return this.verifyToken(token, this.config.refreshSecretKey, 'refresh');
    }
 
    private async verifyToken(

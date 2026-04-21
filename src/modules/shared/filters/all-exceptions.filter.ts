@@ -1,6 +1,7 @@
-import { AppConfigService } from '@infra/config/config.service';
+import type { appConfig } from '@infra/config/config';
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { ResponseStatusConstant } from '@shared/constants';
 import type { UniversalResponseDto } from '@shared/dtos';
 import type { IAppExceptionPayload, IErrorDetails } from '@shared/interfaces';
@@ -10,7 +11,7 @@ import type { Request, Response } from 'express';
 export class AllExceptionsFilter implements ExceptionFilter {
    private readonly logger = new Logger(AllExceptionsFilter.name);
 
-   constructor(private readonly configService: AppConfigService) {}
+   constructor(private readonly appSettings: ConfigType<typeof appConfig>) {}
 
    catch(exception: unknown, host: ArgumentsHost): void {
       const ctx = host.switchToHttp();
@@ -24,7 +25,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
    }
 
    private getErrorResponse(req: Request, exception: unknown): UniversalResponseDto<null> {
-      const isProduction = this.configService.isProduction;
+      const isProduction = this.appSettings.isProduction;
       const payload = this.getExceptionPayload(exception);
       const errorCode = this.pickFirstValue(payload.code) ?? this.getExceptionName(exception);
       const error: IErrorDetails = {

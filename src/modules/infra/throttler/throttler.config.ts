@@ -1,6 +1,7 @@
+import { throttlerEnvConfig } from '@infra/config/config';
 import { AppConfigModule } from '@infra/config/config.module';
-import { AppConfigService } from '@infra/config/config.service';
 import { type ExecutionContext } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import {
    seconds,
    type ThrottlerAsyncOptions,
@@ -21,30 +22,30 @@ function hasThrottleMetadata(context: ExecutionContext): boolean {
 
 export const AUTH_THROTTLE_RULES = {
    register: {
-      limit: 3,
-      ttl: seconds(60),
+      limit: () => throttlerEnvConfig().authRules.register.limit,
+      ttl: () => throttlerEnvConfig().authRules.register.ttl,
    },
    login: {
-      limit: 5,
-      ttl: seconds(60),
+      limit: () => throttlerEnvConfig().authRules.login.limit,
+      ttl: () => throttlerEnvConfig().authRules.login.ttl,
    },
    refresh: {
-      limit: 20,
-      ttl: seconds(60),
+      limit: () => throttlerEnvConfig().authRules.refresh.limit,
+      ttl: () => throttlerEnvConfig().authRules.refresh.ttl,
    },
 } as const;
 
 export const throttlerConfig: ThrottlerAsyncOptions = {
    imports: [AppConfigModule],
-   inject: [AppConfigService],
-   useFactory: (configService: AppConfigService): ThrottlerModuleOptions => ({
+   inject: [throttlerEnvConfig.KEY],
+   useFactory: (config: ConfigType<typeof throttlerEnvConfig>): ThrottlerModuleOptions => ({
       errorMessage: 'Слишком много попыток аутентификации. Попробуйте позже.',
       setHeaders: true,
       skipIf: (context: ExecutionContext) => !hasThrottleMetadata(context),
       throttlers: [
          {
-            ttl: seconds(configService.throttlerTtl),
-            limit: configService.throttlerLimit,
+            ttl: seconds(config.ttl),
+            limit: config.limit,
          },
       ],
    }),

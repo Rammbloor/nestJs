@@ -1,6 +1,7 @@
+import type { swaggerConfig } from '@infra/config/config';
 import { SwaggerInitializer } from '@infra/swagger/swagger.initializer';
-import type { AppConfigService } from '@infra/config/config.service';
 import type { INestApplication } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import basicAuth from 'express-basic-auth';
@@ -35,11 +36,11 @@ jest.mock('helmet', () => jest.fn(() => 'helmet-middleware'));
 
 describe('SwaggerInitializer', () => {
    const configService = {
-      swaggerDocPath: '/docs',
-      scalarDocPath: '/docs/scalar',
-      swaggerDocLogin: 'admin',
-      swaggerDocPassword: 'admin',
-   } as unknown as AppConfigService;
+      swaggerPath: '/docs',
+      scalarPath: '/docs/scalar',
+      login: 'admin',
+      password: 'admin',
+   } as ConfigType<typeof swaggerConfig>;
 
    it('protects docs routes and relaxes CSP for Scalar and Swagger UI', () => {
       const app = {

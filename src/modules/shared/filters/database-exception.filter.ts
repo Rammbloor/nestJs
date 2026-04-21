@@ -1,6 +1,7 @@
-import { AppConfigService } from '@infra/config/config.service';
+import type { appConfig } from '@infra/config/config';
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import { Catch, HttpStatus, Logger } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { ResponseStatusConstant } from '@shared/constants';
 import type { UniversalResponseDto } from '@shared/dtos';
 import type { IErrorDetails } from '@shared/interfaces';
@@ -16,7 +17,7 @@ interface QueryDriverError {
 export class DatabaseExceptionFilter implements ExceptionFilter {
    private readonly logger = new Logger(DatabaseExceptionFilter.name);
 
-   constructor(private readonly configService: AppConfigService) {}
+   constructor(private readonly appSettings: ConfigType<typeof appConfig>) {}
 
    catch(exception: QueryFailedError, host: ArgumentsHost): void {
       const ctx = host.switchToHttp();
@@ -111,7 +112,7 @@ export class DatabaseExceptionFilter implements ExceptionFilter {
          message,
       };
 
-      if (!this.configService.isProduction) {
+      if (!this.appSettings.isProduction) {
          error.debug = {
             name: exception.name,
             object: driverError.table,

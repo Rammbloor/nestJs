@@ -1,5 +1,6 @@
-import { AppConfigService } from '@infra/config/config.service';
+import type { swaggerConfig } from '@infra/config/config';
 import type { INestApplication } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import basicAuth from 'express-basic-auth';
@@ -21,7 +22,7 @@ const docsContentSecurityPolicy = {
 } as const;
 
 export class SwaggerInitializer {
-   constructor(private readonly configService: AppConfigService) {}
+   constructor(private readonly config: ConfigType<typeof swaggerConfig>) {}
 
    init(app: INestApplication) {
       this.configureBasicAuth(app);
@@ -30,11 +31,11 @@ export class SwaggerInitializer {
 
    private configureBasicAuth(app: INestApplication) {
       app.use(
-         [this.configService.swaggerDocPath, this.configService.scalarDocPath],
+         [this.config.swaggerPath, this.config.scalarPath],
          basicAuth({
             challenge: true,
             users: {
-               [this.configService.swaggerDocLogin]: this.configService.swaggerDocPassword,
+               [this.config.login ?? '']: this.config.password ?? '',
             },
          }),
          helmet({
@@ -72,7 +73,7 @@ export class SwaggerInitializer {
 
       const document = SwaggerModule.createDocument(app, config);
 
-      SwaggerModule.setup(this.configService.swaggerDocPath, app, document, {
+      SwaggerModule.setup(this.config.swaggerPath, app, document, {
          swaggerOptions: {
             persistAuthorization: true,
             tagsSorter: 'alpha',
@@ -80,6 +81,6 @@ export class SwaggerInitializer {
          },
       });
 
-      app.use(this.configService.scalarDocPath, apiReference({ content: document }));
+      app.use(this.config.scalarPath, apiReference({ content: document }));
    }
 }

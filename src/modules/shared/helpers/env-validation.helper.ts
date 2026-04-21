@@ -67,6 +67,36 @@ export class EnvironmentVariables {
    THROTTLER_LIMIT: number = 10;
 
    @IsOptional()
+   @IsInt()
+   @Min(1)
+   AUTH_REGISTER_THROTTLE_TTL: number = 60;
+
+   @IsOptional()
+   @IsInt()
+   @Min(1)
+   AUTH_REGISTER_THROTTLE_LIMIT: number = 3;
+
+   @IsOptional()
+   @IsInt()
+   @Min(1)
+   AUTH_LOGIN_THROTTLE_TTL: number = 60;
+
+   @IsOptional()
+   @IsInt()
+   @Min(1)
+   AUTH_LOGIN_THROTTLE_LIMIT: number = 5;
+
+   @IsOptional()
+   @IsInt()
+   @Min(1)
+   AUTH_REFRESH_THROTTLE_TTL: number = 60;
+
+   @IsOptional()
+   @IsInt()
+   @Min(1)
+   AUTH_REFRESH_THROTTLE_LIMIT: number = 20;
+
+   @IsOptional()
    @IsString()
    CORS_ORIGINS: string = '';
 

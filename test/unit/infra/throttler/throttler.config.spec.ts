@@ -1,14 +1,20 @@
 import { throttlerConfig } from '@infra/throttler';
+import type { throttlerEnvConfig } from '@infra/config/config';
 import type { ExecutionContext } from '@nestjs/common';
-import type { AppConfigService } from '@infra/config/config.service';
+import type { ConfigType } from '@nestjs/config';
 import type { ThrottlerModuleOptions } from '@nestjs/throttler';
 
 function getResolvedOptions(): Exclude<ThrottlerModuleOptions, unknown[]> {
    const factory = throttlerConfig.useFactory;
    const options = factory?.({
-      throttlerTtl: 1,
-      throttlerLimit: 10,
-   } as AppConfigService);
+      ttl: 1,
+      limit: 10,
+      authRules: {
+         register: { ttl: 60_000, limit: 3 },
+         login: { ttl: 60_000, limit: 5 },
+         refresh: { ttl: 60_000, limit: 20 },
+      },
+   } as ConfigType<typeof throttlerEnvConfig>);
 
    return options as Exclude<ThrottlerModuleOptions, unknown[]>;
 }

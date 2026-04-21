@@ -1,9 +1,9 @@
 import { join } from 'node:path';
+import { appConfig, databaseConfig } from '@infra/config/config';
 import { AppConfigModule } from '@infra/config/config.module';
-import { AppConfigService } from '@infra/config/config.service';
-import { ConfigService } from '@nestjs/config';
+import type { ConfigType } from '@nestjs/config';
 import { EnvironmentConstant } from '@shared/constants';
-import { type EnvironmentVariables, validate } from '@shared/helpers';
+import { validate } from '@shared/helpers';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import {
@@ -12,14 +12,17 @@ import {
    getDataSourceByName,
 } from 'typeorm-transactional';
 
-function buildOptions(configService: AppConfigService): DataSourceOptions {
+function buildOptions(
+   database: ConfigType<typeof databaseConfig>,
+   app: ConfigType<typeof appConfig>,
+): DataSourceOptions {
    return {
       type: 'postgres',
-      host: configService.dbHost,
-      port: configService.dbPort,
-      username: configService.dbUser,
-      password: configService.dbPassword,
-      database: configService.dbName,
+      host: database.host,
+      port: database.port,
+      username: database.user,
+      password: database.password,
+      database: database.name,
 
       entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
       migrations: [join(__dirname, 'migrations/*.{ts,js}')],
@@ -27,14 +30,15 @@ function buildOptions(configService: AppConfigService): DataSourceOptions {
       migrationsRun: true,
       migrationsTableName: 'typeorm_migrations',
       namingStrategy: new SnakeNamingStrategy(),
-      logging: configService.appEnv === EnvironmentConstant.DEVELOPMENT,
+      logging: app.env === EnvironmentConstant.DEVELOPMENT,
    };
 }
 
 export const typeOrmConfig = {
    imports: [AppConfigModule],
-   inject: [AppConfigService],
-   useFactory: (configService: AppConfigService) => buildOptions(configService),
+   inject: [databaseConfig.KEY, appConfig.KEY],
+   useFactory: (database: ConfigType<typeof databaseConfig>, app: ConfigType<typeof appConfig>) =>
+      buildOptions(database, app),
    dataSourceFactory: async (options: DataSourceOptions) => {
       const existingDataSource = getDataSourceByName('default');
 
@@ -50,8 +54,6 @@ export const typeOrmConfig = {
    },
 };
 
-const cliConfigService = new AppConfigService(
-   new ConfigService<EnvironmentVariables, true>(validate(process.env as Record<string, unknown>)),
-);
+validate(process.env as Record<string, unknown>);
 
-export default new DataSource(buildOptions(cliConfigService));
+export default new DataSource(buildOptions(databaseConfig(), appConfig()));

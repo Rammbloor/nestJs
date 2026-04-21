@@ -1,6 +1,7 @@
-import { AppConfigService } from '@infra/config/config.service';
+import { appConfig, swaggerConfig } from '@infra/config/config';
 import { SwaggerInitializer } from '@infra/swagger/swagger.initializer';
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AllExceptionsFilter, DatabaseExceptionFilter } from '@shared/filters';
 import { TransformInterceptor } from '@shared/interceptors';
@@ -12,10 +13,11 @@ async function bootstrap(): Promise<void> {
    initializeTransactionalContext();
    const logger = new Logger('MAIN');
    const app = await NestFactory.create(AppModule);
-   const configService = app.get(AppConfigService);
+   const appSettings = app.get<ConfigType<typeof appConfig>>(appConfig.KEY);
+   const swaggerSettings = app.get<ConfigType<typeof swaggerConfig>>(swaggerConfig.KEY);
 
    app.enableCors({
-      origin: configService.corsOrigins,
+      origin: appSettings.corsOrigins,
       credentials: true,
    });
    app.use(helmet());
@@ -23,8 +25,8 @@ async function bootstrap(): Promise<void> {
    app.enableVersioning({ type: VersioningType.URI });
    app.useGlobalInterceptors(new TransformInterceptor());
    app.useGlobalFilters(
-      new DatabaseExceptionFilter(configService),
-      new AllExceptionsFilter(configService),
+      new DatabaseExceptionFilter(appSettings),
+      new AllExceptionsFilter(appSettings),
    );
    app.useGlobalPipes(
       new ValidationPipe({
@@ -34,19 +36,19 @@ async function bootstrap(): Promise<void> {
       }),
    );
 
-   if (!configService.isProduction) {
-      const swaggerInitializer = new SwaggerInitializer(configService);
+   if (!appSettings.isProduction) {
+      const swaggerInitializer = new SwaggerInitializer(swaggerSettings);
       swaggerInitializer.init(app);
    }
 
-   await app.listen(configService.serverPort, '0.0.0.0');
+   await app.listen(appSettings.port, '0.0.0.0');
 
    const url = await app.getUrl();
 
    logger.verbose(`Server started at ${url}`);
-   if (!configService.isProduction) {
-      logger.verbose(`Swagger available on ${url}${configService.swaggerDocPath}`);
-      logger.verbose(`Scalar available on ${url}${configService.scalarDocPath}`);
+   if (!appSettings.isProduction) {
+      logger.verbose(`Swagger available on ${url}${swaggerSettings.swaggerPath}`);
+      logger.verbose(`Scalar available on ${url}${swaggerSettings.scalarPath}`);
    }
 }
 void bootstrap();
